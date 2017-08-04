@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 class CodeReader():
     filename = 'korea_stock_code.csv'
     data = None

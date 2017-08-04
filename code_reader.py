@@ -12,7 +12,7 @@ class CodeReader():
 
         ## code 값에 leading 0 유지 후 index 처리
         self.data = pd.read_csv(filename, comment='#', converters={'code': lambda x: str(x)})
-        self.data = self.data.set_index('code')
+        self.data = self.data.set_index('code', drop=False)
         return self.data;
 
     @classmethod

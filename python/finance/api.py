@@ -1,11 +1,12 @@
 #import json
+from datetime import datetime
+
 import simplejson as json
+from code_reader import CodeReader
 from flask import Flask
 from flask_restful import Resource, Api, reqparse
 
-from code_reader import CodeReader
-from finance_data_reader import history_google, history_yahoo
-from datetime import datetime
+from finance.finance_data_reader import history_google, history_yahoo
 
 app = Flask(__name__)
 api = Api(app)

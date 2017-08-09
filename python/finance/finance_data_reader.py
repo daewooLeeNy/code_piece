@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pandas_datareader as pdr
 
-from code_reader import CodeReader
+from finance.code_reader import CodeReader
 
 
 def history_google(code, start, end):

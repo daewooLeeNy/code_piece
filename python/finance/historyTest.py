@@ -1,7 +1,10 @@
 import unittest
-from code_reader import CodeReader
-from finance_data_reader import history_yahoo, history_google, graph
 from datetime import datetime
+
+from code_reader import CodeReader
+
+from finance.finance_data_reader import history_yahoo, history_google, graph
+
 
 class historyTest(unittest.TestCase):
     def test_google_history(self):

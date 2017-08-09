@@ -1,8 +1,9 @@
 import pandas as pd
+from os.path import dirname, join
 
 
 class CodeReader():
-    filename = 'korea_stock_code.csv'
+    filename = join(dirname(__file__), 'korea_stock_code.csv')
     data = None
 
     @classmethod

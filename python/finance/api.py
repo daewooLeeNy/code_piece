@@ -3,7 +3,7 @@ from datetime import datetime
 
 import simplejson as json
 from code_reader import CodeReader
-from flask import Flask
+from myflask import Flask
 from flask_restful import Resource, Api, reqparse
 
 from finance.finance_data_reader import history_google, history_yahoo

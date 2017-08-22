@@ -13,3 +13,13 @@ class User(Base):
 
     def __repr__(self):
         return '<User %r>' % (self.name)
+
+
+from marshmallow_sqlalchemy import ModelSchema
+class UserScheme(ModelSchema):
+    class Meta:
+        model = User
+
+user_scheme = UserScheme()
+users_scheme = UserScheme(many=True)
+

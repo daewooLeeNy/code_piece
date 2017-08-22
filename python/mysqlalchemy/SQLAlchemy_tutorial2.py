@@ -1,5 +1,4 @@
-## http://www.haruair.com/blog/1695
-## python 3
+w## python 3
 import sqlalchemy
 from sqlalchemy import create_engine
 

@@ -1,0 +1,507 @@
+<html>
+<head>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/3.4.2/css/swiper.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/3.4.2/js/swiper.min.js"></script>
+
+  <style>
+  .body {
+    border: 1px;
+    border-color: black;
+  }
+  .column.circle {
+    width: 10px;
+    height: 10px;
+    border-radius: 15px;
+    background-color: #bfbfbf;
+    border: 1px;
+    margin-right: 5px;
+    display:inline-block
+  }
+
+  .column.choose {
+    background-color: #99ccff;
+    transition:  width 0.1s, height 0.1s, background-color 0.1s, transform 2s;
+  }
+
+  .column.size_medium {
+    width: 7px;
+    height: 7px;
+  }
+
+  .column.size_small {
+    width: 5px;
+    height: 5px;
+  }
+
+  .column.hide {
+    width:0px;
+    height: 0px;
+    transition: height 0.5s, transform 2s;
+
+  }
+
+  .row {
+    margin-top: 10px;
+  }
+  </style>
+  <style>
+     .swiper-container {
+         width: 200px;
+         height: 100px;
+     }
+     .swiper-slide {
+         text-align: center;
+         font-size: 18px;
+         background: #fff;
+         /* Center slide text vertically */
+         display: -webkit-box;
+         display: -ms-flexbox;
+         display: -webkit-flex;
+         display: flex;
+         -webkit-box-pack: center;
+         -ms-flex-pack: center;
+         -webkit-justify-content: center;
+         justify-content: center;
+         -webkit-box-align: center;
+         -ms-flex-align: center;
+         -webkit-align-items: center;
+         align-items: center;
+     }
+     </style>
+</head>
+<body>
+  <p>
+    개수가 5개 이상일 때 기본 크기가 3개이며 이후부터 점차 줄어드는 원을 만듭니다.<br>
+    시작 지점은 1이며 한칸씩 좌/우로 이동하며 현재 위치를 변경 합니다.<br>
+    현재 위치가 마지막 기본 크기의 위치보다 커졌을 때 원을 기본 크기로 변경 합니다.<br>
+    현재 위치가 기본 크기보다 커질 경우 기본 크기를 이동 시키며, 현재 위치가 기본 크기 안에서 움직일때는 기본 크기가 변하지 않습니다. <br>
+    현재 위치보다 좌/우측의 개수가 3개를 넘어가는 지점부터는 표시 하지 않습니다.<br>
+  </p>
+
+<span>2개</span>
+<div>
+  <button id="before" onClick="before(pagination1)"><</button>
+  <button id="next" onClick="next(pagination1)">></button>
+</div>
+<div id="pagination1" class="row"></div>
+
+<span>5개</span>
+<div>
+  <button id="before" onClick="before(pagination2)"><</button>
+  <button id="next" onClick="next(pagination2)">></button>
+</div>
+<div id="pagination2" class="row"></div>
+
+<span>9개</span>
+<div>
+  <button id="before" onClick="before(pagination3)"><</button>
+  <button id="next" onClick="next(pagination3)">></button>
+</div>
+<div id="pagination3" class="row"></div>
+
+
+<span>Swiper</span>
+
+<div class="swiper-container">
+    <div class="swiper-wrapper">
+        <div class="swiper-slide">Slide 1</div>
+        <div class="swiper-slide">Slide 2</div>
+        <div class="swiper-slide">Slide 3</div>
+        <div class="swiper-slide">Slide 4</div>
+        <div class="swiper-slide">Slide 5</div>
+        <div class="swiper-slide">Slide 6</div>
+        <div class="swiper-slide">Slide 7</div>
+        <div class="swiper-slide">Slide 8</div>
+        <div class="swiper-slide">Slide 9</div>
+        <div class="swiper-slide">Slide 10</div>
+    </div>
+    <!-- Add Pagination -->
+    <div class="swiper-pagination"></div>
+</div>
+<div id="pagination-vNode"></div>
+
+<div>
+  <button onClick="move(this);">Move</button>
+  <div class="column circle"></div>
+</div>
+<script>
+function move(el) {
+  var target = el.parentNode.querySelector(".column");
+  target.style.transform = "translateX(30px)";
+  target.style.transition = "all 0.5s";
+  target.style.transitionTimingFunction = "ease-out";
+
+}
+</script>
+
+<script>
+/**
+ * Swiper의 infinite pagiation(pagination 표현 공간이 적은 경우)
+ * @param       {object}  options 생성 옵션
+ * @param       {string}  options.el pagination을 생성 할 element selector
+ * @param       {ElementNode}    options.elNode pagination을 생성 할 element 객체. 우선순위: elNode > el. (pagination이 dynamic 하게 생성 될 경우)
+ * @param       {function} options.onPaginationMoveLeft 최초 시작 위치에서 좌측 시작 지점으로 이동 하기 위한 custom function. onPaginationMoveLeft(elNode, leftElementSize);
+ * @constructor
+ */
+function InfinitePagination(options) {
+  var _OPTIONS = options;
+  // _OPTIONS.el
+  var el = _OPTIONS.el;
+  var elNode = _OPTIONS.elNode ? _OPTIONS.elNode : document.querySelector(el);
+  var onPaginationMoveLeft = _OPTIONS.onPaginationMoveLeft;
+
+  var styles_n = {
+    element: 'column',
+    choice: ['choose'],
+    size: ["size_medium", "size_small", "hide"]
+  }
+
+  var currentStyle = ["choose"];
+  var styles = ["size_medium", "size_small", "hide"];
+  // start:end
+  var maxDisplaySize = 7;
+  var normalStateSize = 3;
+  var leftPositions = [0, 0];
+  var normalPositions = [0, 0];
+  var rightPositions = [0, 0];
+  var current = 0;
+  var displaySize = 0;
+  var listSize = 0;
+  var state = false;
+
+  /**
+   * 객체 생성 후에 호출.
+   * count가 변경 되는 경우 el(or elNode)의 childNode를 삭제 후에 호출
+   * @param  {[type]} count [description]
+   * @return {[type]}       [description]
+   */
+  this.init = function(count) {
+    if(count < 1) {
+      throw new Error('Size will be over 0');
+    }
+
+    if(elNode.childNodes.length > 0) {
+      throw new Error('Remove children node in target node');
+    }
+
+    initPositions(count);
+    this.generate(create(elNode));
+    showCurrent(elNode);
+    state = true;
+  }
+
+  this.isInitialzed = function() {
+    return state;
+  }
+
+  this.generate = function(action) {
+    var gap = 0, idx = 0, classes = [];
+
+    // left
+    if(leftPositions[0] >= 0 && leftPositions[1] !== normalPositions[0]) {
+      for(var idx = leftPositions[0]; idx <= leftPositions[1]; idx++) {
+        classes = styles.slice(0, leftPositions[1] - idx + 1);
+
+
+        action(idx, classes);
+      }
+
+      if(leftPositions[1] - leftPositions[0] >= 0) {
+        paginationMoveLeft();
+      }
+    } else {
+      // tansform to starting position
+      moveStartingPosition();
+    }
+
+    // normal
+    for(var idx = normalPositions[0]; idx <= normalPositions[1]; idx++) {
+      action(idx, []);
+    }
+
+    // right
+    // 보통 크기의 마지막 인덱스와 같을 경우에는 rightPositions는 무시 함
+    if(rightPositions[0] >= 0 && rightPositions[0] !== normalPositions[1]) {
+      classes = [];
+      var stylesCount = 1;
+      for(var idx = rightPositions[0]; idx <= rightPositions[1]; idx++, stylesCount++) {
+        classes = styles.slice(0, stylesCount);
+
+        action(idx, classes);
+      }
+    }
+  }
+
+  /**
+   * setMovingNextPosition() or setMovingPrevPosition 호출 후에 화면 갱신
+   */
+  this.repaint = function() {
+    // empty
+    this.generate(update(elNode));
+    showCurrent(elNode);
+  }
+
+  this.getRoot = function() {
+    return elNode;
+  }
+
+  this.getCurrent = function() {
+    return current;
+  }
+
+  /**
+   * 위치를 오른쪽으로 이동
+   */
+  this.setMovingNextPosition = function() {
+    if(current >= displaySize - 1) {
+      return;
+    }
+    current++;
+
+    if(normalPositions[1] < current) {
+      if(isPossibleIncrease(leftPositions[1], displaySize)) {
+        leftPositions[1]++;
+      }
+
+      moveRight(normalPositions);
+
+      leftPositions[0] = 0;
+      leftPositions[1] = normalPositions[0] - 1;
+
+      moveRight(rightPositions);
+    }
+  }
+
+  /**
+   * 위치를 왼쪽으로 이동
+   */
+  this.setMovingPrevPosition = function() {
+    if(current <= 0) {
+      return;
+    }
+
+    var prev = current;
+    current = current - 1;
+
+    if(normalPositions[0] > current) {
+      if(leftPositions[1] > 0) {
+        leftPositions[1]--;
+      }
+
+      moveLeft(normalPositions);
+      rightPositions[0] = normalPositions[1] + 1;
+    }
+  }
+
+  /**
+   * 특정 위치로 이동
+   */
+  this.setPosition = function(pos) {
+      var moveRight = current < pos;
+      var action = (moveRight ? this.setMovingNextPosition : this.setMovingPrevPosition);
+      var diff = moveRight ? pos - current : current - pos;
+      for(var i = 0; i < diff; i++) {
+        action();
+      }
+
+      if(diff > 0) {
+        this.repaint();
+      }
+  }
+
+  function paginationMoveLeft() {
+    var leftElementSize = leftPositions[1] - leftPositions[0];
+    if(typeof onPaginationMoveLeft === "function") {
+      onPaginationMoveLeft(elNode, leftElementSize);
+    } else {
+      elNode.style.transform="translateX(" + (10 - (leftElementSize + 1) * 5)+ "px)";
+      elNode.style.transition="all 0.2s";
+    }
+  }
+
+  function moveStartingPosition() {
+    elNode.style.transform="translateX(10px)";
+    elNode.style.transition="all 0s";
+  }
+
+  function initPositions(count) {
+    fill(leftPositions, -1);
+    fill(normalPositions, 0);
+    fill(rightPositions, -1);
+
+    current = 0;
+    listSize = count;
+    displaySize = listSize;
+
+    if(listSize <= normalStateSize + 2) {
+      normalPositions[0] = 0;
+      normalPositions[1] = displaySize - 1;
+    } else {
+      normalPositions[1] = normalStateSize - 1;
+    }
+
+    if(displaySize > normalStateSize + 2) {
+      rightPositions[0] = normalStateSize;
+      rightPositions[1] = displaySize - 1;
+    }
+
+    moveStartingPosition();
+  }
+
+  function getColumns() {
+    return elNode.querySelectorAll("." + styles_n.element);
+  }
+
+  function showCurrent(parentNode) {
+    if(!parentNode) {
+      parentNode = document.querySelector(el);
+    }
+
+    var currentEl = getCurrentElement(parentNode);
+    if(currentEl) {
+      setChoiceStyle('remove', currentEl);
+    }
+
+    var currentEl = getColumns()[current];
+    if(currentEl) {
+      setChoiceStyle('add', currentEl);
+    }
+  }
+
+  function getCurrentElement(parentNode) {
+    return parentNode.querySelector("." + styles_n.element + "."+ styles_n.choice.join("."));
+  }
+
+  function setChoiceStyle(actionName, node) {
+    styles_n.choice.forEach(function(className) {
+      if('add' === actionName) {
+        node.classList.add(className);
+      } else if('remove' === actionName) {
+        node.classList.remove(className);
+      }
+    });
+  }
+
+  function isPossibleIncrease(value, max) {
+    return value < max
+  }
+
+  function moveRight(positions) {
+    if(isPossibleIncrease(positions[0], displaySize - 1)) {
+      positions[0]++;
+      if(isPossibleIncrease(positions[1], displaySize - 1)) {
+        positions[1]++;
+      }
+    }
+  }
+
+  function moveLeft(positions) {
+    if(positions[1] > 0) {
+      positions[1]--;
+      if(positions[0] > 0) {
+        positions[0]--;
+      }
+    }
+  }
+
+  function fill(array, value) {
+    Array.prototype.fill.call(array, value);
+  }
+
+  function create(parentNode) {
+    return function(index, classes) {
+      parentNode.append(createDefaultElement(classes));
+    };
+  }
+
+  function update(parentNode) {
+    return function(index, classes) {
+      var childNode = parentNode.querySelectorAll(".column")[index];
+      if(childNode && childNode.classList) {
+        for(var i = 0; i < styles.length; i++) {
+          if(classes.indexOf(styles[i]) < 0) {
+            childNode.classList.remove(styles[i]);
+          } else if(!childNode.classList.contains(styles[i])){
+            childNode.classList.add(styles[i]);
+          }
+        }
+      }
+    };
+  }
+
+  function createDefaultElement(classList) {
+    var el = document.createElement("div");
+
+    // defualt
+    el.classList.add("column");
+    el.classList.add("circle");
+
+    classList = classList || [];
+    classList.forEach(function(className, i) {
+      el.classList.add(className);
+    })
+
+    return el;
+  }
+}
+
+</script>
+
+<script>
+var pagination1;
+var pagination2;
+var pagination3;
+var pagination4;
+
+createAll();
+function createAll() {
+  pagination1 = createPagination({el:"#pagination1"}, 2);
+  pagination2 = createPagination({el:"#pagination2"}, 5);
+  pagination3 = createPagination({el:"#pagination3"}, 9);
+  pagination4 = createPagination({elNode:document.createElement("div")}, 10);
+}
+
+function createPagination(options, count) {
+  var pagination = new InfinitePagination(options);
+  pagination.init(count);
+
+  return pagination;
+}
+
+function before(pagination){
+  pagination.setMovingPrevPosition();
+  pagination.repaint();
+}
+
+function next(pagination) {
+  pagination.setMovingNextPosition();
+  pagination.repaint();
+}
+</script>
+
+
+<script>
+    var swiper = new Swiper('.swiper-container', {
+        pagination: '.swiper-pagination',
+        paginationClickable: true,
+        loop: true,
+        paginationType: 'custom',
+        paginationCustomRender: function (swiper, current, total) {
+            pagination4.setPosition(current-1);
+            if(current == 1) {
+              if(document.querySelector(swiper.params.pagination).childNodes[0] != pagination4.getRoot()) {
+                document.querySelector(swiper.params.pagination).append(pagination4.getRoot());
+              }
+
+            return;
+          } else {
+            return;
+          }
+        }
+    });
+</script>
+
+</body>
+
+</html>
